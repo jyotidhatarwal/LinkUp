@@ -62,6 +62,59 @@ app.get("/feed", async (req,res) => {
     }
 })
 
+// Delete API -> Deleting a user based on the id
+app.delete("/user", async (req,res) => {
+    const userId = req.body.userId;
+
+    try {
+        const user = await User.findByIdAndDelete(userId);
+        if(!user){
+            res.status(404).send("User Not Found");
+        }else{
+            res.send("User Deleted Successfully");
+        } 
+    }catch(err) {
+        res.status(500).send("Something went wrong!");
+    }
+})
+
+//UPDATE API -> Updating the user details
+app.patch("/user", async (req,res) => { 
+    const userId = req.body.userId;
+    const data = req.body;
+    try{
+        const user = await User.findByIdAndUpdate(userId,data);
+        if(!user){
+            res.status(404).send("User Not Found");
+        }else{
+            res.send("Updated User details Successfully");
+        }
+    }catch(err) {
+        res.status(500).send("Something went wrong!");
+    }
+})
+
+// UPDATE API BASED ON EMAILID
+
+// app.patch("/user", async (req,res) => {
+//     const userEmail = req.body.emailId;
+//     const data = req.body;
+//     try {
+//         const user = await User.findOneAndUpdate(
+//             { emailId: userEmail },
+//             { $set: data },
+//             { new: true } // optional: returns updated doc
+//         );
+//         if(!user){
+//             res.status(404).send("User Not Found");
+//         }else{
+//             res.send("User Updated Successfully");
+//         } 
+//     }catch(err) {
+//         res.status(500).send("Something went wrong!");
+//     }
+// })
+
 connectDatabase().then(() => {
     console.log("DataBase Connection is established");
     app.listen(3000, () => {
