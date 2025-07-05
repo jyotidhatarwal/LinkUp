@@ -6,18 +6,15 @@ const User = require("./models/user");
 
 const { adminAuth } = require("./middleware/auth")
 
+
+// Middleware to convert the JSON Request to JS Object and adding it to the request
+app.use(express.json());
+
 app.post("/signup", async (req,res) => {
-    const userObj = {
-        firstName: "Nitin",
-        lastName: "Dhatarwal",
-        emailId: "nitin.dhatarwal@lowes.com",
-        age: "23",
-        password: "Nitin123",
-        gender: "Male"
-    }
+    console.log(req.body);
 
     // Creating an instance of User Model
-    const user = new User(userObj);
+   const user = new User(req.body);
 
     // Error Handling
     try {
@@ -25,6 +22,43 @@ app.post("/signup", async (req,res) => {
         res.send("User Added Successfully to the Database.");
     }catch(err) {
         res.status(400).send("Error saving the user: ", err.message);
+    }
+})
+
+// Get the user based on emailId from the database
+
+app.get("/user", async (req,res) => {
+
+    const userEmail = req.body.emailId;
+
+    const users = await User.find({emailId: userEmail});
+
+    try{
+        if(users.length === 0){
+            res.status(404).send("User Not Found");
+        }else{
+            res.send(users);
+        }
+
+    }catch(err) {
+        res.status(500).send("Something went wrong!");
+    }
+})
+
+// FEED API -> Get all the users from the database
+
+app.get("/feed", async (req,res) => {
+
+    const users = await User.find({});
+    try {
+        if(users.length === 0){
+            res.status(404).send("Details not found");
+        }else{
+            res.send(users);
+        }
+       
+    }catch (err) {
+        res.status(500).send("Something went Wrong!");
     }
 })
 
