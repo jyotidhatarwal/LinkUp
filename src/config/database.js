@@ -1,7 +1,9 @@
 const mongoose = require("mongoose");
 
+const databaseCredentials = require("./constant");
+
 const connectDatabase = async () => {
-    await mongoose.connect("mongodb+srv://jyotidhatarwal1999:3JIYOPh1aZVF5Bve@jyoti.qiaozgl.mongodb.net/linkUp");
+    await mongoose.connect(databaseCredentials);
 };
 
 module.exports = {connectDatabase};

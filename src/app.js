@@ -1,4 +1,5 @@
 const express = require('express');
+const validator = require("validator");
 
 const app = express();
 const {connectDatabase} = require("./config/database");
@@ -10,20 +11,38 @@ const { adminAuth } = require("./middleware/auth")
 // Middleware to convert the JSON Request to JS Object and adding it to the request
 app.use(express.json());
 
-app.post("/signup", async (req,res) => {
-    console.log(req.body);
 
-    // Creating an instance of User Model
-   const user = new User(req.body);
+function validateSignup(req, res, next) {
+    const { firstName, emailId, age, password, gender } = req.body;
+    if (!firstName || firstName.length < 4) return res.status(400).send("First name must be at least 4 characters.");
+    if (!emailId || !validator.isEmail(emailId)) return res.status(400).send("Invalid email.");
+    if (!age || age < 18) return res.status(400).send("Age must be 18 or older.");
+    if (!validator.isStrongPassword(password, {
+        minLength: 8,
+        minLowercase: 1,
+        minUppercase: 1,
+        minNumbers: 1,
+        minSymbols: 1
+    })) {
+        return res.status(400).send("Password must be at least 8 characters long and include lowercase, uppercase, number, and special character.");
+    }
+    if (gender && !["male", "female", "others"].includes(gender.toLowerCase())) {
+        return res.status(400).send("Gender must be male, female, or others.");
+    }
+    next();
+}
 
-    // Error Handling
+app.post("/signup", validateSignup, async (req, res) => {
     try {
+        // Creating an instance of User Model
+        const user = new User(req.body);
         await user.save();
         res.send("User Added Successfully to the Database.");
-    }catch(err) {
-        res.status(400).send("Error saving the user: ", err.message);
+    } catch (err) {
+        res.status(400).send(err.message);
     }
-})
+});
+
 
 // Get the user based on emailId from the database
 
@@ -79,18 +98,27 @@ app.delete("/user", async (req,res) => {
 })
 
 //UPDATE API -> Updating the user details
-app.patch("/user", async (req,res) => { 
-    const userId = req.body.userId;
+app.patch("/user/:userId", async (req,res) => { 
+    const userId = req.params?.userId;
     const data = req.body;
+   
     try{
-        const user = await User.findByIdAndUpdate(userId,data);
+        const ALLOWED_UPDATES = ["password","about"];
+
+        const isUpdateAllowed = Object.keys(data).every((k) => {
+            ALLOWED_UPDATES.includes(k);
+        })
+        if(!isUpdateAllowed){
+            throw new Error("Update not allowed!");
+        }
+        const user = await User.findByIdAndUpdate(userId,data,{runValidators: true});
         if(!user){
             res.status(404).send("User Not Found");
         }else{
             res.send("Updated User details Successfully");
         }
     }catch(err) {
-        res.status(500).send("Something went wrong!");
+        res.status(500).send(err.message);
     }
 })
 
