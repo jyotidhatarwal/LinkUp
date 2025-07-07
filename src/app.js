@@ -1,5 +1,6 @@
 const express = require('express');
 const validator = require("validator");
+const bcrypt = require("bcrypt");
 
 const app = express();
 const {connectDatabase} = require("./config/database");
@@ -34,14 +35,46 @@ function validateSignup(req, res, next) {
 
 app.post("/signup", validateSignup, async (req, res) => {
     try {
+        const {firstName, lastName, emailId, password,age,gender,about} = req.body;
+        // Encrypting the password
+        const passwordHash = await bcrypt.hash(password,10);
+
         // Creating an instance of User Model
-        const user = new User(req.body);
+        const user = new User({
+            firstName,
+            lastName,
+            emailId,
+            password: passwordHash,
+            age,
+            gender,
+            about
+        });
         await user.save();
         res.send("User Added Successfully to the Database.");
     } catch (err) {
         res.status(400).send(err.message);
     }
 });
+
+// LOGIN API
+
+app.post("/login", async (req,res) => {
+    try {
+        const {emailId, password} = req.body;
+        const user = await User.findOne({emailId});
+        if(!user){
+            res.status(404).send("User is not Signed In");
+        }
+        const isCorrectPassword = await bcrypt.compare(password, user.password);
+        if(isCorrectPassword) {
+            res.send("Login Successful");
+        }else {
+            res.send("Login Failed, Invalid Credentials!");
+        }
+    }catch(err){
+        res.status(500).send(err.message);
+    }
+})
 
 
 // Get the user based on emailId from the database
@@ -106,11 +139,17 @@ app.patch("/user/:userId", async (req,res) => {
         const ALLOWED_UPDATES = ["password","about"];
 
         const isUpdateAllowed = Object.keys(data).every((k) => {
-            ALLOWED_UPDATES.includes(k);
+           return ALLOWED_UPDATES.includes(k);
         })
         if(!isUpdateAllowed){
             throw new Error("Update not allowed!");
         }
+        // Encrypting the password
+        if(data.password){
+            const passwordHash = await bcrypt.hash(data.password,10);
+            data.password = passwordHash;
+        }
+        // Finding the user
         const user = await User.findByIdAndUpdate(userId,data,{runValidators: true});
         if(!user){
             res.status(404).send("User Not Found");
