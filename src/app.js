@@ -1,16 +1,22 @@
 const express = require('express');
 const validator = require("validator");
 const bcrypt = require("bcrypt");
+const cookieParser = require("cookie-parser");
+const jwt = require("jsonwebtoken");
 
 const app = express();
 const {connectDatabase} = require("./config/database");
 const User = require("./models/user");
 
-const { adminAuth } = require("./middleware/auth")
+const { adminAuth } = require("./middleware/auth");
+const {SECRET_KEY_JWT} = require("./config/constant");
 
 
 // Middleware to convert the JSON Request to JS Object and adding it to the request
 app.use(express.json());
+
+// Middleware to  read the cookies
+app.use(cookieParser());
 
 
 function validateSignup(req, res, next) {
@@ -67,6 +73,14 @@ app.post("/login", async (req,res) => {
         }
         const isCorrectPassword = await bcrypt.compare(password, user.password);
         if(isCorrectPassword) {
+            // create a JWT Token
+           const token = jwt.sign({_id: user._id}, SECRET_KEY_JWT, {expiresIn: "1h" });
+           console.log("JWT Cookie", token);
+
+            // Add the token to cookie and send the response back to user
+            
+            res.cookie("token", token);
+
             res.send("Login Successful");
         }else {
             res.send("Login Failed, Invalid Credentials!");
@@ -76,6 +90,27 @@ app.post("/login", async (req,res) => {
     }
 })
 
+app.get("/profile", async (req,res) => {
+
+    try {
+        const cookies = req.cookies;
+        console.log("This is profile cookie: ",cookies);
+        const {token} = cookies;
+        console.log("This is profile token: ",token);
+        const decodedMessage = jwt.verify(token, SECRET_KEY_JWT);
+        console.log("Decoded Data:", decodedMessage);
+       const {_id} = decodedMessage;
+        const user = await User.findById(_id);
+        console.log("This is user ", user);
+        if(!user) {
+            res.status(404).send("User Not found");
+        }else {
+            res.send(user);
+        }
+    }catch (err) {
+        res.status(500).send(err.message);
+    }
+})
 
 // Get the user based on emailId from the database
 
