@@ -8,7 +8,7 @@ const app = express();
 const {connectDatabase} = require("./config/database");
 const User = require("./models/user");
 
-const { adminAuth } = require("./middleware/auth");
+const { userAuth } = require("./middleware/auth");
 const {SECRET_KEY_JWT} = require("./config/constant");
 
 
@@ -90,23 +90,11 @@ app.post("/login", async (req,res) => {
     }
 })
 
-app.get("/profile", async (req,res) => {
+app.get("/profile", userAuth, async (req,res) => {
 
     try {
-        const cookies = req.cookies;
-        console.log("This is profile cookie: ",cookies);
-        const {token} = cookies;
-        console.log("This is profile token: ",token);
-        const decodedMessage = jwt.verify(token, SECRET_KEY_JWT);
-        console.log("Decoded Data:", decodedMessage);
-       const {_id} = decodedMessage;
-        const user = await User.findById(_id);
-        console.log("This is user ", user);
-        if(!user) {
-            res.status(404).send("User Not found");
-        }else {
-            res.send(user);
-        }
+       const user = req.user;
+       res.send(user);
     }catch (err) {
         res.status(500).send(err.message);
     }
