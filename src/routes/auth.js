@@ -27,6 +27,7 @@ function validateSignup(req, res, next) {
     next();
 }
 
+// SIGNUP API
 authRouter.post("/signup", validateSignup, async (req, res) => {
     try {
         const {firstName, lastName, emailId, password,age,gender,about} = req.body;
@@ -76,6 +77,15 @@ authRouter.post("/login", async (req,res) => {
     }catch(err){
         res.status(500).send(err.message);
     }
+})
+
+// LOGOUT API
+
+authRouter.post("/logout", async (req,res) => {
+    res.cookie("token", null, {
+        expires: new Date (Date.now())
+    });
+    res.send("Logged Out Successfully");
 })
 
 module.exports = authRouter;

@@ -51,6 +51,17 @@ const userSchema = new mongoose.Schema({
         type: String,
         default: "Hey ! There",
         maxLength: 250
+    },
+    photoUrl : {
+        type: String,
+        validate(value) {
+            if(!validator.isURL(value)){
+                throw new Error ("Invalid photo url: "+ value)
+            }
+        }
+    },
+    skills : {
+        type: [String]
     }
 },{timestamps: true});
 
