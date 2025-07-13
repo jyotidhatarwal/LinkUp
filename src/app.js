@@ -11,9 +11,11 @@ app.use(express.json());
 app.use(cookieParser());
 const authRouter = require("./routes/auth");
 const profileRouter = require("./routes/profile");
+const connectionRequestRouter = require("./routes/request");
 
 app.use("/", authRouter);
 app.use("/", profileRouter);
+app.use("/", connectionRequestRouter);
 // Get the user based on emailId from the database
 
 app.get("/user", async (req,res) => {
