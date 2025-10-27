@@ -15,14 +15,18 @@
 Status : igonre, interested, accepted, rejected
 
 # For sending the request will be 
-### connectionRequestRouter:
+# connectionRequestRouter:
     - POST /request/send/interested/:userId
     - POST /request/send/ignored/:userId
 
-# For responding the request will be
+    these can be combined as /request/send/:status/:userId
+
+#### For responding the request will be
 
     - POST /request/review/accepted/:requestId
     - POST /request/review/rejected/:requestId
+
+    these can be combined as /request/review/:status/:requestId
 
 # To check all the matches/ connections
 ### userRouter:
