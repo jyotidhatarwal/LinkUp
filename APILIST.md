@@ -40,6 +40,10 @@ Status : igonre, interested, accepted, rejected
 
     - GET /user/feed
 
+### Adding pagination for the feed API
+
+    /feed?page=1&limit=10 -> First 10 users 1-10
+            Query Params
 
 
 ####  We will be using express.Router to create different router (eg-> authRouter, userRouter etc) and each of these router will handle the given routes 

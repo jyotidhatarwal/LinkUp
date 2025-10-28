@@ -2,6 +2,7 @@ const express = require('express');
 const { userAuth } = require('../middleware/auth');
 const connectionRequest = require('../models/connectionRequest');
 const connectionRequestModel = require('../models/connectionRequest');
+const User = require('../models/user');
 
 const userRouter = express.Router();
 
@@ -50,5 +51,51 @@ userRouter.get("/user/connections", userAuth, async (req,res) => {
         res.statusCode(400).send({message: err.message});
     }
 });
+
+
+userRouter.get("/feed", userAuth, async (req,res) => {
+    try{
+        const loggedInUser = req.user;
+        // to apply pagination we use query parameters of page and limit /feed?page=1&limit=10
+        const page = parseInt(req.query.page) || 1;
+        let limit = parseInt(req.query.limit) || 10;
+        limit = limit > 50 ? 50 : limit;
+        const skip = (page-1) * limit;
+        /* User should see all other user cards except
+            1. His own card
+            2.His already exisitng connections
+            3. Ignored Users
+            4. Already sent the connection request 
+        */
+
+        // Find all the connection request which either the loggedIn user has sent or received
+        const connectionRequests = await connectionRequestModel.find({
+            $or:[
+                {toUserId: loggedInUser._id},
+                {fromUserId: loggedInUser._id}
+            ]
+        }).select("fromUserId toUserId");
+
+        const hideUsersFromFeed = new Set();
+        connectionRequests.forEach(req => {
+            hideUsersFromFeed.add(req.fromUserId.toString());
+            hideUsersFromFeed.add(req.toUserId.toString());
+        });
+
+        // Finding all the users other than the hidden users and the logged in user
+        // ne -> not equals
+        // nin -> not in array
+        const users = await User.find({
+            $and : [
+                {_id: {$nin: Array.from(hideUsersFromFeed)}},
+                {_id: {$ne : loggedInUser._id}}
+            ]
+        }).select(USER_SAFE_DATA).skip(skip).limit(limit);
+    
+        res.json({message: "Successfully fetching the feed", data : users});
+    }catch(err){
+        res.status(400).json({message: err.message});
+    }
+})
 
 module.exports = userRouter;
