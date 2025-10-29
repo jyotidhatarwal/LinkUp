@@ -4,6 +4,11 @@ const {connectDatabase} = require("./config/database");
 
 const cookieParser = require("cookie-parser");
 const bcrypt = require("bcrypt");
+const cors = require("cors");
+app.use(cors({
+    origin: "http://localhost:5173",
+    credentials: true
+}));
 // Middleware to convert the JSON Request to JS Object and adding it to the request
 app.use(express.json());
 
