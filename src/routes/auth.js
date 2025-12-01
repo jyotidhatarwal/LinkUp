@@ -44,8 +44,16 @@ authRouter.post("/signup", validateSignup, async (req, res) => {
             gender,
             about
         });
-        await user.save();
-        res.send("User Added Successfully to the Database.");
+        const savedUser = await user.save();
+          // create a JWT Token
+          const token = jwt.sign({_id: user._id}, SECRET_KEY_JWT, {expiresIn: "1h" });
+          console.log("JWT Cookie", token);
+
+           // Add the token to cookie and send the response back to user
+           
+           res.cookie("token", token);
+
+        res.json({message: "User Added Successfully to the Database.", data: savedUser});
     } catch (err) {
         res.status(400).send(err.message);
     }
