@@ -1,9 +1,7 @@
 const mongoose = require("mongoose");
 
-const {databaseCredentials} = require("./constant");
-
 const connectDatabase = async () => {
-    await mongoose.connect(databaseCredentials);
+    await mongoose.connect(process.env.DATABASE_CREDENTIALS);
 };
 
 module.exports = {connectDatabase};

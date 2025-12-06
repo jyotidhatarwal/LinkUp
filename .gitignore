@@ -1,3 +1,4 @@
 node_modules
 src/config/constant.js
 TestCredentails.md
+.env

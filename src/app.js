@@ -1,12 +1,15 @@
 const express = require('express');
 const app = express();
+const dotenv = require("dotenv");
+dotenv.config();
 const {connectDatabase} = require("./config/database");
+const PORT = process.env.PORT || 3000;
 
 const cookieParser = require("cookie-parser");
 const bcrypt = require("bcrypt");
 const cors = require("cors");
 app.use(cors({
-    origin: "http://localhost:5173",
+    origin: "*",
     credentials: true
 }));
 // Middleware to convert the JSON Request to JS Object and adding it to the request
@@ -130,9 +133,9 @@ app.patch("/user/:userId", async (req,res) => {
 
 connectDatabase().then(() => {
     console.log("DataBase Connection is established");
-    app.listen(3000, () => {
-        console.log("Server is Successfully listening to port 3000 ....");
+    app.listen(PORT, () => {
+        console.log(`Server is Successfully listening to port ${PORT} ....`);
     })
 }).catch((err) => {
-    console.log("Database can not be connected");
+    console.log("Database can not be connected",err.message);
 })

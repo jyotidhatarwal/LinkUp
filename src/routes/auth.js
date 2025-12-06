@@ -5,7 +5,6 @@ const validator = require("validator");
 const bcrypt = require("bcrypt");
 const User = require("../models/user");
 const jwt = require("jsonwebtoken");
-const {SECRET_KEY_JWT} = require("../config/constant");
 
 function validateSignup(req, res, next) {
     const { firstName, emailId, age, password, gender } = req.body;
@@ -46,7 +45,7 @@ authRouter.post("/signup", validateSignup, async (req, res) => {
         });
         const savedUser = await user.save();
           // create a JWT Token
-          const token = jwt.sign({_id: user._id}, SECRET_KEY_JWT, {expiresIn: "1h" });
+          const token = jwt.sign({_id: user._id}, process.env.SECRET_KEY_JWT, {expiresIn: "1h" });
           console.log("JWT Cookie", token);
 
            // Add the token to cookie and send the response back to user
@@ -71,7 +70,7 @@ authRouter.post("/login", async (req,res) => {
         const isCorrectPassword = await bcrypt.compare(password, user.password);
         if(isCorrectPassword) {
             // create a JWT Token
-           const token = jwt.sign({_id: user._id}, SECRET_KEY_JWT, {expiresIn: "1h" });
+           const token = jwt.sign({_id: user._id}, process.env.SECRET_KEY_JWT, {expiresIn: "1h" });
            console.log("JWT Cookie", token);
 
             // Add the token to cookie and send the response back to user
