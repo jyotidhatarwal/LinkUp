@@ -8,12 +8,32 @@ const PORT = process.env.PORT || 3000;
 const cookieParser = require("cookie-parser");
 const bcrypt = require("bcrypt");
 const cors = require("cors");
+const allowedOrigins = [
+    "http://localhost:5173",
+    "https://linkup-ui.netlify.app"
+];
+
 app.use(cors({
-    origin: "*",
+    origin: (origin, callback) => {
+        // Allow server-to-server requests and tools (like Postman)
+        if (!origin) return callback(null, true);
+
+        if (allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error("Not allowed by CORS"));
+        }
+    },
     credentials: true
 }));
 // Middleware to convert the JSON Request to JS Object and adding it to the request
 app.use(express.json());
+
+app.use((req, res, next) => {
+    res.header("Access-Control-Allow-Credentials", "true");
+    res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+    next();
+  });
 
 // Middleware to  read the cookies
 app.use(cookieParser());
@@ -133,8 +153,8 @@ app.patch("/user/:userId", async (req,res) => {
 
 connectDatabase().then(() => {
     console.log("DataBase Connection is established");
-    app.listen(PORT, () => {
-        console.log(`Server is Successfully listening to port ${PORT} ....`);
+    app.listen(3000, () => {
+        console.log(`Server is Successfully listening to port 3000 ....`);
     })
 }).catch((err) => {
     console.log("Database can not be connected",err.message);
