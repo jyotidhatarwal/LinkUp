@@ -4,7 +4,7 @@ const dotenv = require("dotenv");
 dotenv.config();
 const {connectDatabase} = require("./config/database");
 const PORT = process.env.PORT || 3000;
-
+const http = require("http");
 const cookieParser = require("cookie-parser");
 const bcrypt = require("bcrypt");
 const cors = require("cors");
@@ -41,11 +41,13 @@ const authRouter = require("./routes/auth");
 const profileRouter = require("./routes/profile");
 const connectionRequestRouter = require("./routes/request");
 const userRouter = require('./routes/user');
+const initializeSocket = require('./utils/socket');
 
 app.use("/", authRouter);
 app.use("/", profileRouter);
 app.use("/", connectionRequestRouter);
 app.use("/", userRouter);
+
 // Get the user based on emailId from the database
 
 app.get("/user", async (req,res) => {
@@ -151,9 +153,13 @@ app.patch("/user/:userId", async (req,res) => {
 //     }
 // })
 
+
+const server = http.createServer(app);
+initializeSocket(server);
+
 connectDatabase().then(() => {
     console.log("DataBase Connection is established");
-    app.listen(3000, () => {
+    server.listen(3000, () => {
         console.log(`Server is Successfully listening to port 3000 ....`);
     })
 }).catch((err) => {
