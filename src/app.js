@@ -42,11 +42,13 @@ const profileRouter = require("./routes/profile");
 const connectionRequestRouter = require("./routes/request");
 const userRouter = require('./routes/user');
 const initializeSocket = require('./utils/socket');
+const chatRouter = require('./routes/chat');
 
 app.use("/", authRouter);
 app.use("/", profileRouter);
 app.use("/", connectionRequestRouter);
 app.use("/", userRouter);
+app.use("/", chatRouter);
 
 // Get the user based on emailId from the database
 
