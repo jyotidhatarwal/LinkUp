@@ -1,7 +1,8 @@
-const socket = require("socket.io");
+// const socket = require("socket.io");
 const crypto = require("crypto");
 const { Chat } = require("../models/chat");
 const connectionRequestModel = require("../models/connectionRequest");
+const { Server } = require("socket.io");
 
 const getSecretRoomId = (userId, targetUserId) => {
    return crypto
@@ -12,11 +13,16 @@ const getSecretRoomId = (userId, targetUserId) => {
 
 const initializeSocket = (server) => {
 
-    const io = socket(server, {
+    const io = new Server(server, {
         cors: {
-            origin: 'http://localhost:5173',
-        }
-    });
+          origin: [
+            "http://localhost:5173",
+            "https://linkup-ui.netlify.app"
+          ],
+          credentials: true,
+        },
+        transports: ["websocket", "polling"],
+      });
 
     io.on("connection", (socket) => {
         //Handle events
@@ -39,20 +45,17 @@ const initializeSocket = (server) => {
                 console.log(firstName + " Received " + text);
 
                 // Check if the userId and tragetUserId are friends
-               await connectionRequestModel.findOne({
-                    $or : [
-                    {
-                    fromUserId: userId,
-                    toUserId: targetUserId,
-                    status: "accepted"
-                    },
-                    {
-                        fromUserId: targetUserId,
-                        toUserId: userId,
-                        status: "accepted"
-                    }
-                ]
-            });
+                const isFriend = await connectionRequestModel.findOne({
+                    $or: [
+                      { fromUserId: userId, toUserId: targetUserId, status: "accepted" },
+                      { fromUserId: targetUserId, toUserId: userId, status: "accepted" }
+                    ]
+                  });
+                  
+                  if (!isFriend) {
+                    return; // or emit an error
+                  }
+                  
                  // save message to database
                 let chat = await Chat.findOne({
                     participants: { $all : [userId, targetUserId]},
@@ -78,8 +81,8 @@ const initializeSocket = (server) => {
         });
 
         socket.on("disconnect", () => {
-
-        })
+            console.log("Socket disconnected:", socket.id);
+          });
     });
 }
 
